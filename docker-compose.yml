@@ -1,0 +1,131 @@
+# Оркестрация всего стека: Postgres, Kafka (KRaft, без Zookeeper),
+# ai-service (уже готовый Python ИИ-модуль), backend-api, backend-worker, frontend.
+#
+# Порядок запуска управляется через depends_on + condition: service_healthy --
+# т.е. backend-api не стартует, пока Postgres и Kafka не прошли healthcheck,
+# backend-worker не стартует, пока вдобавок не готов ai-service.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dxa_platform}
+      POSTGRES_USER: ${POSTGRES_USER:-dxa_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dxa_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-dxa_user} -d ${POSTGRES_DB:-dxa_platform}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.8.0
+    ports:
+      - "9092:9092"
+    environment:
+      # KRaft-режим (без Zookeeper), однонодовый брокер+контроллер -- достаточно
+      # для хакатона, в проде разносится на отдельные ноды.
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: "ZXhhbXBsZS1jbHVzdGVyLWlk"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 20s
+
+  ai-service:
+    build:
+      context: ./DepthZdravHack
+    ports:
+      - "8000:8000"
+    volumes:
+      # веса моделей не хранятся в git (см. .gitignore исходного проекта) --
+      # монтируем локальную папку models/ с хоста внутрь контейнера
+      - ./DepthZdravHack/models:/app/models:ro
+    # healthcheck:
+    #   test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 10
+    #   start_period: 15s
+
+  backend-api:
+    build:
+      context: ./backend-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend_api_data:/app/data
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-dxa_platform}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-dxa_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-dxa_password}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-please-this-must-be-at-least-256-bits-long}
+      JWT_EXPIRY_SECONDS: ${JWT_EXPIRY_SECONDS:-3600}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend-worker:
+    build:
+      context: ./backend-worker
+    volumes:
+      - backend_worker_data:/app/data
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-dxa_platform}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-dxa_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-dxa_password}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AI_MODULE_BASE_URL: http://ai-service:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend-api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  backend_api_data:
+  backend_worker_data:

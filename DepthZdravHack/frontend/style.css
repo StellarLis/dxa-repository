@@ -1,0 +1,290 @@
+/*
+  Дизайн-система: клинический рабочий инструмент, не маркетинговая страница.
+  Только системные шрифты -- сервис должен работать полностью локально без
+  обращения к внешним сервисам (п.3.2 ТЗ), поэтому никаких Google Fonts/CDN.
+
+  Палитра: спокойный холодный серо-синий фон (лабораторный, не тёплый кремовый
+  и не чёрный с неоновым акцентом), диагностический стальной-синий как акцент.
+  Вердикт (норма/нарушение) читается по цвету мгновенно -- это главная задача
+  интерфейса, всё остальное вторично.
+*/
+
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #1a2430;
+  --ink-muted: #64707c;
+  --line: #dce2e7;
+  --accent: #2c6e8c;
+  --accent-dark: #204f66;
+
+  --ok-bg: #eaf5ee;
+  --ok-text: #1f7a46;
+  --bad-bg: #fbeae6;
+  --bad-text: #b23a20;
+  --fail-bg: #f4eedd;
+  --fail-text: #8a6a1a;
+
+  --radius: 6px;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.45;
+}
+
+.header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.header__title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.header__subtitle {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+/* --- Upload --- */
+
+.upload {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.upload__dropzone {
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 40px 24px;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.upload__dropzone.is-dragover {
+  border-color: var(--accent);
+  background: #f2f7fa;
+}
+
+.upload__hint {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.upload__hint-secondary {
+  margin: 8px 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.upload__selected {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.btn--primary:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.btn--accent {
+  background: var(--accent);
+  color: #fff;
+  align-self: flex-start;
+}
+
+.btn--accent:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+.btn--outline {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent-dark);
+  margin-left: auto;
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: #f2f7fa;
+}
+
+/* --- Summary bar --- */
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-top: 28px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.summary__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary__value {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.summary__value--bad {
+  color: var(--bad-text);
+}
+
+.summary__value--fail {
+  color: var(--fail-text);
+}
+
+.summary__label {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* --- Results list (worklist rows, not card grid) --- */
+
+.results {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.result-row {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.result-row:last-child {
+  border-bottom: none;
+}
+
+.result-row__thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #0d1117;
+  border: 1px solid var(--line);
+}
+
+.result-row__thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.result-row__main {
+  min-width: 0;
+}
+
+.result-row__filename {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-row__meta {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.result-row__comment {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge--ok {
+  background: var(--ok-bg);
+  color: var(--ok-text);
+}
+
+.badge--bad {
+  background: var(--bad-bg);
+  color: var(--bad-text);
+}
+
+.badge--fail {
+  background: var(--fail-bg);
+  color: var(--fail-text);
+}
+
+.result-row__region {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-transform: none;
+}

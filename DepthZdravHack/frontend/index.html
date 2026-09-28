@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Контроль качества денситометрии</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header__title">Контроль качества денситометрии</div>
+    <div class="header__subtitle">Автоматическая проверка укладки и разметки DXA-исследований</div>
+  </header>
+
+  <main class="main">
+    <section class="upload" id="upload-zone">
+      <input type="file" id="file-input" multiple accept=".dcm" hidden />
+      <div class="upload__dropzone" id="dropzone">
+        <div class="upload__hint">Перетащите DICOM-файлы сюда</div>
+        <div class="upload__hint-secondary">или</div>
+        <button class="btn btn--primary" id="browse-btn" type="button">Выбрать файлы</button>
+      </div>
+      <div class="upload__selected" id="selected-info" hidden></div>
+      <button class="btn btn--accent" id="process-btn" type="button" disabled>Обработать</button>
+    </section>
+
+    <section class="summary" id="summary" hidden>
+      <div class="summary__stat">
+        <span class="summary__value" id="stat-total">0</span>
+        <span class="summary__label">обработано</span>
+      </div>
+      <div class="summary__stat">
+        <span class="summary__value summary__value--bad" id="stat-violations">0</span>
+        <span class="summary__label">с нарушениями</span>
+      </div>
+      <div class="summary__stat">
+        <span class="summary__value summary__value--fail" id="stat-failures">0</span>
+        <span class="summary__label">ошибок обработки</span>
+      </div>
+      <div class="summary__stat">
+        <span class="summary__value" id="stat-avgtime">0.0с</span>
+        <span class="summary__label">среднее время</span>
+      </div>
+      <button class="btn btn--outline" id="download-btn">Скачать таблицу (.xlsx)</button>
+    </section>
+
+    <section class="results" id="results"></section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

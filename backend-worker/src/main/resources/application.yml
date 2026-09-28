@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: kafka-consumer-app
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: my-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.value.default.type: ru.andrew.backend_worker.dto.ScanProcessingMessage
+        spring.json.trusted.packages: ru.andrew.backend_worker.dto
+ai-service:
+  url: ${AI_MODULE_BASE_URL:http://localhost:8000}

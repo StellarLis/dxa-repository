@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: backend-api
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/dxa_platform}
+    username: ${SPRING_DATASOURCE_USERNAME:dxa_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:dxa_password}
+
+  jpa:
+    hibernate:
+      # схему создаёт и версионирует Flyway (db/migration) -- Hibernate только
+      # проверяет соответствие сущностей реальной схеме, ничего не создаёт сам
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        # без этого Spring Kafka кладёt в заголовок сообщения имя Java-класса
+        # producer'а (__TypeId__) -- backend-worker, отдельный модуль с другим
+        # пакетом, не сможет его разрешить. Сообщение должно быть чистым JSON-
+        # контрактом (см. раздел 4.4 ТЗ), не завязанным на внутренние классы API-сервиса.
+        spring.json.add.type.headers: false
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 200MB
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-in-production-please-this-must-be-at-least-256-bits-long}
+    expiry-seconds: ${JWT_EXPIRY_SECONDS:3600}
+  kafka:
+    scan-requests-topic: dicom-processing-requests
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

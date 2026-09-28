@@ -1,0 +1,45 @@
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.scan-table .table-row {
+  grid-template-columns: 2fr 1fr 1fr 1.25fr 1.1fr;
+}
+
+.quality-pill {
+  display: inline-block;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.quality-pill.success {
+  background: #dff2e5;
+  color: #347453;
+}
+
+.quality-pill.failed {
+  background: #ffe1db;
+  color: #ad5545;
+}
+
+.quality-pill.pending {
+  background: #edf2ef;
+  color: #72817c;
+}
+
+@media (max-width: 640px) {
+  .detail-actions {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 14px;
+  }
+
+  .scan-table .table-row {
+    grid-template-columns: 1.7fr 1fr 1fr 1.2fr;
+  }
+}
