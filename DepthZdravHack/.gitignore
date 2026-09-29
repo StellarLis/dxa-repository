@@ -1,6 +1,3 @@
-data/
-models/*.pt
-models/*.pth
 __pycache__/
 *.pyc
 venv/
